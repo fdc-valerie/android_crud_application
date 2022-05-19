@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/b1"
+    android:orientation="vertical"
+    tools:context=".LoginActivity">
+
+    <ImageView
+        android:layout_width="250dp"
+        android:layout_height="200dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="80dp"
+        android:background="@drawable/logo3"/>
+
+        <TextView
+            android:id="@+id/textLoginTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Welcome Back!"
+            android:textColor="@color/grey"
+            android:layout_marginTop="-40dp"
+            android:textSize="50sp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/indigo_daisy"/>
+
+        <TextView
+            android:id="@+id/textLoginTitle2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sign in to continue"
+            android:textColor="@color/grey"
+            android:textStyle="bold"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginTop="-10dp"
+            android:textSize="15sp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/txtLoginError"
+            android:text="error msg"
+            app:hintTextColor="@color/grey"
+            android:padding="10dp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:visibility="gone"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/email"
+            android:hint="Enter email address"
+            android:padding="10dp"
+            android:textColorHint="@color/grey"
+            app:hintTextColor="@color/grey"
+            android:inputType="text"
+            android:background="@drawable/inputtext_custom"
+            style="@style/TextInputLayout"/>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/password"
+            android:layout_marginTop="30dp"
+            android:hint="Enter pasword"
+            android:padding="10dp"
+            android:textColorHint="@color/grey"
+            app:hintTextColor="@color/grey"
+            android:inputType="textPassword"
+            android:background="@drawable/inputtext_custom"
+            style="@style/TextInputLayout"/>
+
+        <Button
+            android:id="@+id/btnLogin"
+            style="@style/TextInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:background="@drawable/button_custom"
+            android:hint="LOGIN"
+            android:inputType="textPassword"
+            android:padding="10dp"
+            android:textColorHint="@color/white"
+            app:hintTextColor="@color/white" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:id="@+id/txtReg"
+            android:textColor="@color/grey"
+            android:text="New User? Sign Up"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_marginTop="-200dp"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyle"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"/>
+    </LinearLayout>
+</LinearLayout>
