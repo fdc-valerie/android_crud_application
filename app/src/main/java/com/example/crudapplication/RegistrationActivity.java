@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseAuthUserCollisionException;
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 
@@ -82,6 +83,9 @@ public class RegistrationActivity extends AppCompatActivity {
                                 }
                                 catch(FirebaseAuthWeakPasswordException e) {
                                      regPassword.setError("The given password is invalid.");
+                                }
+                                catch(FirebaseAuthInvalidCredentialsException e){
+                                    regEmail.setError("The email address is badly formatted");
                                 }
                                 catch (FirebaseAuthUserCollisionException existEmail) {
                                     regEmail.setError("Email already exists. Please try another email.");
