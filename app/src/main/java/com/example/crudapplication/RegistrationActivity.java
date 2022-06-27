@@ -17,6 +17,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 
 import org.w3c.dom.Text;
 
@@ -73,12 +75,24 @@ public class RegistrationActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             loadingPB.setVisibility(View.GONE);
-                            if (task.isSuccessful()) {
+                            if (!task.isSuccessful()) {
+                                try
+                                {
+                                    throw task.getException();
+                                }
+                                catch(FirebaseAuthWeakPasswordException e) {
+                                     regPassword.setError("The given password is invalid.");
+                                }
+                                catch (FirebaseAuthUserCollisionException existEmail) {
+                                    regEmail.setError("Email already exists. Please try another email.");
+                                }
+                                catch (Exception e) {
+                                    Toast.makeText(RegistrationActivity.this, "Fail to register. Please try again", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
                                 Toast.makeText(RegistrationActivity.this, "Successfully registered", Toast.LENGTH_SHORT).show();
                                 startActivity(new Intent(RegistrationActivity.this, LoginActivity.class));
                                 finish();
-                            } else {
-                                Toast.makeText(RegistrationActivity.this, "Fail to register. Please try again", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
