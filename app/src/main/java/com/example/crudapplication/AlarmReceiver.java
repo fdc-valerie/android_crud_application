@@ -1,9 +1,19 @@
 package com.example.crudapplication;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -13,20 +23,54 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Intent i = new Intent(context, HomeActivity.class);
-        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, i, PendingIntent.FLAG_IMMUTABLE );
+        Bundle bundle = intent.getExtras();
+        String text = bundle.getString("event");
+        String date = bundle.getString("date") + " " + bundle.getString("time");
+        Uri notifSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ context.getPackageName() + "/" + R.raw.test);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "todo")
-                .setSmallIcon(R.drawable.b1)
-                .setContentText("TODO Alarm")
-                .setContentText("Reminder for your task")
+        //Click on Notification
+
+        Intent intent1 = new Intent(context, NotificationMessage.class);
+        intent1.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent1.putExtra("message", text);
+        //Notification Builder
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent1, PendingIntent.FLAG_ONE_SHOT);
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_layout);
+        contentView.setImageViewResource(R.id.icon, R.mipmap.ic_launcher);
+        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+        contentView.setOnClickPendingIntent(R.id.flashButton, pendingSwitchIntent);
+        contentView.setTextViewText(R.id.message, text);
+        contentView.setTextViewText(R.id.date, date);
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, "notify_001")
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setSmallIcon(R.drawable.ic_baseline_alarm_24)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setSound(notifSound, AudioManager.STREAM_ALARM)
+                .setVibrate(new long[0])
                 .setAutoCancel(true)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent);
+                .setOngoing(true)
+                .setContent(contentView)
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(pendingIntent, true);
+        Notification mNotif = mBuilder.build();
+        mNotif.flags = Notification.FLAG_INSISTENT;
 
-        NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(context);
-        notificationManagerCompat.notify(123, builder.build());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String channelId = "channel_id";
+            NotificationChannel channel = new NotificationChannel(channelId, "channel name", NotificationManager.IMPORTANCE_HIGH);
+            channel.enableVibration(true);
+            AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .build();
+            channel.setSound(notifSound, audioAttributes);
+            notificationManager.createNotificationChannel(channel);
+            mBuilder.setChannelId(channelId);
+        }
+
+        Notification notification = mBuilder.build();
+        notificationManager.notify(1, notification);
     }
 }
