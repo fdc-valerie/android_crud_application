@@ -194,11 +194,11 @@ public class HomeActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void setAlarm(String dateTime) {
+    private void setAlarm(String dateTime, String task, String description) {
         AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         Intent intent = new Intent(HomeActivity.this, AlarmReceiver.class);
-        intent.putExtra("event", text);
-        intent.putExtra("time", date);
+        intent.putExtra("task", task);
+        intent.putExtra("description", description);
         intent.putExtra("date", dateTime);
 
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
@@ -284,8 +284,6 @@ public class HomeActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         key = getRef(position).getKey();
-                        task = model.getTask();
-                        description = model.getDescription();
                         previousTimeToNotify = model.getDate();
 
                         updateTask();

@@ -24,15 +24,20 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
-        String text = bundle.getString("event");
-        String date = bundle.getString("date") + " " + bundle.getString("time");
+        String task = bundle.getString("task");
+        String date = bundle.getString("date");
+        String description = bundle.getString("description");
         Uri notifSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ context.getPackageName() + "/" + R.raw.test);
 
         //Click on Notification
 
         Intent intent1 = new Intent(context, NotificationMessage.class);
         intent1.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent1.putExtra("message", text);
+        intent1.putExtra("task", task);
+        intent1.putExtra("description", description);
+        intent1.putExtra("date", date);
+
+
         //Notification Builder
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent1, PendingIntent.FLAG_ONE_SHOT);
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -41,7 +46,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         contentView.setImageViewResource(R.id.icon, R.mipmap.ic_launcher);
         PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         contentView.setOnClickPendingIntent(R.id.flashButton, pendingSwitchIntent);
-        contentView.setTextViewText(R.id.message, text);
+        contentView.setTextViewText(R.id.message, task);
         contentView.setTextViewText(R.id.date, date);
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, "notify_001")
                 .setCategory(NotificationCompat.CATEGORY_ALARM)
