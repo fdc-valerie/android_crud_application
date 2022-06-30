@@ -3,6 +3,7 @@ package com.example.crudapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -20,7 +21,7 @@ public class NotificationMessage extends AppCompatActivity {
 
         Bundle bundle = getIntent().getExtras();
         task.setText(bundle.getString("task"));
-
-
+        description.setText(bundle.getString("description"));
+        date.setText(bundle.getString("date"));
     }
 }

@@ -74,6 +74,7 @@ public class HomeActivity extends AppCompatActivity {
     private PendingIntent pendingIntent;
     private String timeTonotify = "";
     private LinearLayoutManager linearLayoutManager;
+    private String taskID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,6 +157,7 @@ public class HomeActivity extends AppCompatActivity {
                 String mTask = etTask.getText().toString();
                 String mDescription = etDescription.getText().toString();
                 String id = reference.push().getKey();
+                taskID = id;
                 String date = DateFormat.getDateInstance().format(new Date());
 
                 if (TextUtils.isEmpty(mTask)) {
@@ -197,10 +199,6 @@ public class HomeActivity extends AppCompatActivity {
 
     private void setAlarm(String dateTime, String task, String description) {
         AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(HomeActivity.this, AlarmReceiver.class);
-        intent.putExtra("task", task);
-        intent.putExtra("description", description);
-        intent.putExtra("date", dateTime);
 
         int pendingFlags;
         if (Build.VERSION.SDK_INT >= 23) {
@@ -209,7 +207,7 @@ public class HomeActivity extends AppCompatActivity {
             pendingFlags = PendingIntent.FLAG_ONE_SHOT;
         }
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
+        //PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
 
         DateFormat formatter = new SimpleDateFormat("MMM dd, yyyy hh:mm");
         Calendar cal = Calendar.getInstance();
@@ -219,6 +217,13 @@ public class HomeActivity extends AppCompatActivity {
             long alarmDateTime = alarmDate.getTime();
 
             if (alarmDateTime >= currentTime) {
+                Intent intent = new Intent(HomeActivity.this, AlarmReceiver.class);
+                intent.putExtra("user_id", userID);
+                intent.putExtra("task_id", taskID);
+
+                Log.d("task id "+taskID, "valerie task id");
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
+
                 am.set(AlarmManager.RTC_WAKEUP, alarmDateTime, pendingIntent);
                 Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
             }
@@ -318,7 +323,7 @@ public class HomeActivity extends AppCompatActivity {
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
-                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
+                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount()- 1);
             }
         });
     }
