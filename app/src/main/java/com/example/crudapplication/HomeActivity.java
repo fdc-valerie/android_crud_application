@@ -16,7 +16,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -70,7 +72,8 @@ public class HomeActivity extends AppCompatActivity {
     private Calendar calendar;
     private AlarmManager alarmManager;
     private PendingIntent pendingIntent;
-    private String timeTonotify;
+    private String timeTonotify = "";
+    private LinearLayoutManager linearLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +82,7 @@ public class HomeActivity extends AppCompatActivity {
         createNotificationChannel();
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
         recyclerView.setHasFixedSize(true);
@@ -209,11 +212,16 @@ public class HomeActivity extends AppCompatActivity {
         PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
 
         DateFormat formatter = new SimpleDateFormat("MMM dd, yyyy hh:mm");
+        Calendar cal = Calendar.getInstance();
         try {
-            Date date1 = formatter.parse(dateTime);
-            am.set(AlarmManager.RTC_WAKEUP, date1.getTime(), pendingIntent);
+            Date alarmDate = formatter.parse(dateTime);
+            long currentTime = new Date().getTime();
+            long alarmDateTime = alarmDate.getTime();
 
-            Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
+            if (alarmDateTime >= currentTime) {
+                am.set(AlarmManager.RTC_WAKEUP, alarmDateTime, pendingIntent);
+                Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -306,6 +314,13 @@ public class HomeActivity extends AppCompatActivity {
 
         recyclerView.setAdapter(adapter);
         adapter.startListening();
+
+        adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                linearLayoutManager.smoothScrollToPosition(recyclerView, null, adapter.getItemCount());
+            }
+        });
     }
 
     private void updateTask() {
