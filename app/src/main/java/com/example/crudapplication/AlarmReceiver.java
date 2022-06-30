@@ -38,13 +38,30 @@ public class AlarmReceiver extends BroadcastReceiver {
         intent1.putExtra("date", date);
 
 
+        int pendingFlags;
+        if (Build.VERSION.SDK_INT >= 23) {
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE;
+        } else {
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT;
+        }
+
         //Notification Builder
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent1, PendingIntent.FLAG_ONE_SHOT);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent1, pendingFlags);
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_layout);
         contentView.setImageViewResource(R.id.icon, R.mipmap.ic_launcher);
-        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+
+
+        int pendingSwitchFlags;
+        if (Build.VERSION.SDK_INT >= 23) {
+            pendingSwitchFlags = PendingIntent.FLAG_IMMUTABLE;
+        } else {
+            pendingSwitchFlags = 0;
+        }
+
+        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, intent, pendingSwitchFlags);
         contentView.setOnClickPendingIntent(R.id.flashButton, pendingSwitchIntent);
         contentView.setTextViewText(R.id.message, task);
         contentView.setTextViewText(R.id.date, date);

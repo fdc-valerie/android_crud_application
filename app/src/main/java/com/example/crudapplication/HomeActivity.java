@@ -3,7 +3,6 @@ package com.example.crudapplication;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,7 +17,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -201,20 +199,24 @@ public class HomeActivity extends AppCompatActivity {
         intent.putExtra("description", description);
         intent.putExtra("date", dateTime);
 
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT);
+        int pendingFlags;
+        if (Build.VERSION.SDK_INT >= 23) {
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE;
+        } else {
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT;
+        }
 
-        DateFormat formatter = new SimpleDateFormat("d-M-yyyy hh:mm");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
+
+        DateFormat formatter = new SimpleDateFormat("MMM dd, yyyy hh:mm");
         try {
             Date date1 = formatter.parse(dateTime);
             am.set(AlarmManager.RTC_WAKEUP, date1.getTime(), pendingIntent);
 
             Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
-            Log.v("valerie"+date1, "Alarm Date");
         } catch (ParseException e) {
             e.printStackTrace();
         }
-
-        finish();
 
     }
 
@@ -267,23 +269,26 @@ public class HomeActivity extends AppCompatActivity {
 
         FirebaseRecyclerAdapter<ToDoModel, MyViewHolder> adapter = new FirebaseRecyclerAdapter<ToDoModel, MyViewHolder>(options) {
             @Override
-            protected void onBindViewHolder(@NonNull MyViewHolder holder, final int position, @NonNull final ToDoModel model) {
+            protected void onBindViewHolder(@NonNull MyViewHolder holder, int position, @NonNull final ToDoModel model) {
+                final int pos = position;
                 holder.setDate(model.getDate());
                 holder.setTask(model.getTask());
                 holder.setDescription(model.getDescription());
 
                 String alarmDate = model.getDate();
-                String task = model.getTask();
-                String description = model.getDescription();
+                String dataTask = model.getTask();
+                String dataDescription = model.getDescription();
 
                 if (!TextUtils.isEmpty(alarmDate)) {
-                    setAlarm(alarmDate, task, description);
+                    setAlarm(alarmDate, dataTask, dataDescription);
                 }
 
                 holder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        key = getRef(position).getKey();
+                        key = getRef(pos).getKey();
+                        task = model.getTask();
+                        description = model.getDescription();
                         previousTimeToNotify = model.getDate();
 
                         updateTask();
@@ -394,9 +399,9 @@ public class HomeActivity extends AppCompatActivity {
 
         int pendingFlags;
         if (Build.VERSION.SDK_INT >= 23) {
-            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE;
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE;
         } else {
-            pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+            pendingFlags = PendingIntent.FLAG_ONE_SHOT;
         }
         pendingIntent = PendingIntent.getBroadcast(this, 0, intent, pendingFlags);
 
