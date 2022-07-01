@@ -39,7 +39,6 @@ public class AlarmReceiver extends BroadcastReceiver {
         userID = bundle.getString("user_id");
         taskID = bundle.getString("task_id");
 
-        Log.v("valerie "+taskID, "task id");
         reference = FirebaseDatabase.getInstance().getReference().child("tasks").child(userID).child(taskID);
         reference.get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
             @Override
@@ -75,7 +74,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                     NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
                     RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_layout);
-                    contentView.setImageViewResource(R.id.icon, R.mipmap.ic_launcher);
+                    contentView.setImageViewResource(R.id.icon, R.drawable.logo3);
 
                     int pendingSwitchFlags;
                     if (Build.VERSION.SDK_INT >= 23) {

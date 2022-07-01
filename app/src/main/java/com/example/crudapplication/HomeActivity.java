@@ -48,6 +48,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 public class HomeActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -172,7 +173,6 @@ public class HomeActivity extends AppCompatActivity {
                     loader.setMessage("Adding your data");
                     loader.setCanceledOnTouchOutside(false);
                     loader.show();
-                    //setAlarm();
 
                     String dateAndTime = date + " " + timeTonotify;
 
@@ -197,7 +197,7 @@ public class HomeActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void setAlarm(String dateTime, String task, String description) {
+    private void setAlarm(Long alarmDateTime) {
         AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         int pendingFlags;
@@ -206,30 +206,15 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             pendingFlags = PendingIntent.FLAG_ONE_SHOT;
         }
+        Intent intent = new Intent(HomeActivity.this, AlarmReceiver.class);
+        intent.putExtra("user_id", userID);
+        intent.putExtra("task_id", taskID);
 
-        //PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
+        Log.d("task id "+taskID, "valerie task id");
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
 
-        DateFormat formatter = new SimpleDateFormat("MMM dd, yyyy hh:mm");
-        Calendar cal = Calendar.getInstance();
-        try {
-            Date alarmDate = formatter.parse(dateTime);
-            long currentTime = new Date().getTime();
-            long alarmDateTime = alarmDate.getTime();
-
-            if (alarmDateTime >= currentTime) {
-                Intent intent = new Intent(HomeActivity.this, AlarmReceiver.class);
-                intent.putExtra("user_id", userID);
-                intent.putExtra("task_id", taskID);
-
-                Log.d("task id "+taskID, "valerie task id");
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, intent, pendingFlags);
-
-                am.set(AlarmManager.RTC_WAKEUP, alarmDateTime, pendingIntent);
-                Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
-            }
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
+        am.set(AlarmManager.RTC_WAKEUP, alarmDateTime, pendingIntent);
+        Toast.makeText(this, "Alarm set", Toast.LENGTH_SHORT).show();
 
     }
 
@@ -240,7 +225,7 @@ public class HomeActivity extends AppCompatActivity {
         TimePickerDialog timePickerDialog = new TimePickerDialog(this, new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int i, int i1) {
-                timeTonotify = i + ":" + i1;
+                timeTonotify = String.format("%02d:%02d", i, i1);
                 selectTime.setText(FormatTime(i, i1));
             }
         }, hour, minute, false);
@@ -289,11 +274,17 @@ public class HomeActivity extends AppCompatActivity {
                 holder.setDescription(model.getDescription());
 
                 String alarmDate = model.getDate();
-                String dataTask = model.getTask();
-                String dataDescription = model.getDescription();
 
                 if (!TextUtils.isEmpty(alarmDate)) {
-                    setAlarm(alarmDate, dataTask, dataDescription);
+                    Date alarmSetDate = new Date(alarmDate);
+                    Calendar cal = Calendar.getInstance();
+
+                    long currentTime = cal.getTimeInMillis();
+                    long alarmDateTime = alarmSetDate.getTime();
+
+                    if (alarmDateTime >= currentTime) {
+                        setAlarm(alarmDateTime);
+                    }
                 }
 
                 holder.mView.setOnClickListener(new View.OnClickListener() {
