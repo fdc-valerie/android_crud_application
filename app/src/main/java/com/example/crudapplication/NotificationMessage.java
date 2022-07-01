@@ -3,8 +3,6 @@ package com.example.crudapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.EditText;
 import android.widget.TextView;
 
 public class NotificationMessage extends AppCompatActivity {
@@ -15,9 +13,9 @@ public class NotificationMessage extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_message);
 
-        task = findViewById(R.id.tvTask);
-        description = findViewById(R.id.tvDescription);
-        date = findViewById(R.id.date);
+        task = (TextView) findViewById(R.id.tvTask);
+        description = (TextView) findViewById(R.id.tvDescription);
+        date = (TextView) findViewById(R.id.tvDate);
 
         Bundle bundle = getIntent().getExtras();
         task.setText(bundle.getString("task"));
