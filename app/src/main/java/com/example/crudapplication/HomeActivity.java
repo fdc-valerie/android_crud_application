@@ -30,6 +30,10 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.crudapplication.databinding.ActivityMainBinding;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -42,13 +46,19 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
@@ -76,6 +86,11 @@ public class HomeActivity extends AppCompatActivity {
     private String timeTonotify = "";
     private LinearLayoutManager linearLayoutManager;
     private String taskID;
+
+    final private String FCM_API = "https://fcm.googleapis.com/fcm/send";
+    final private String serverKey = "key=" + "AAAApzVeTKs:APA91bEsti7GgrE1VBro-JsxcGuypGDi9kp-3Zq-7pedkl6V5DDzRtMw-WXGdXVOququWavsFvjGtD0tBVNdYfWV503h5pgA1Wc5pM9ONElM0TW9589dHGjFOWlpFqLMrcNTU1Kf5M-W";
+    final private String contentType = "application/json";
+    final String TAG = "NOTIFICATION TAG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +120,18 @@ public class HomeActivity extends AppCompatActivity {
         });
 
 
+        FirebaseMessaging.getInstance().subscribeToTopic("alarmTask"+userID)
+        .addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                String msg = "Subscribed";
+                if (!task.isSuccessful()) {
+                    msg = "Subscribe failed";
+                }
+                Log.d(TAG, msg);
+                Toast.makeText(HomeActivity.this, msg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void createNotificationChannel() {
@@ -181,6 +208,16 @@ public class HomeActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful()) {
+                                Date alarmSetDate = new Date(dateAndTime);
+                                Calendar cal = Calendar.getInstance();
+
+                                long currentTime = cal.getTimeInMillis();
+                                long alarmDateTime = alarmSetDate.getTime();
+
+                                if (alarmDateTime >= currentTime) {
+                                    setAlarm(alarmDateTime);
+                                }
+
                                 Toast.makeText(HomeActivity.this, "Task successfully added", Toast.LENGTH_SHORT).show();
                             } else {
                                 String error = task.getException().toString();
@@ -273,19 +310,21 @@ public class HomeActivity extends AppCompatActivity {
                 holder.setTask(model.getTask());
                 holder.setDescription(model.getDescription());
 
-                String alarmDate = model.getDate();
-
-                if (!TextUtils.isEmpty(alarmDate)) {
-                    Date alarmSetDate = new Date(alarmDate);
-                    Calendar cal = Calendar.getInstance();
-
-                    long currentTime = cal.getTimeInMillis();
-                    long alarmDateTime = alarmSetDate.getTime();
-
-                    if (alarmDateTime >= currentTime) {
-                        setAlarm(alarmDateTime);
-                    }
-                }
+//                String alarmDate = model.getDate();
+//                String getTask = model.getTask();
+//                String getDescription = model.getDescription();
+//
+//                if (!TextUtils.isEmpty(alarmDate)) {
+//                    Date alarmSetDate = new Date(alarmDate);
+//                    Calendar cal = Calendar.getInstance();
+//
+//                    long currentTime = cal.getTimeInMillis();
+//                    long alarmDateTime = alarmSetDate.getTime();
+//
+//                    if (alarmDateTime >= currentTime) {
+//                        setAlarm(alarmDateTime);
+//                    }
+//                }
 
                 holder.mView.setOnClickListener(new View.OnClickListener() {
                     @Override

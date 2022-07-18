@@ -1,37 +1,36 @@
 package com.example.crudapplication;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.util.Log;
-import android.widget.RemoteViews;
 
 import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
-
+import com.android.volley.AuthFailureError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private DatabaseReference reference;
-    private String taskID, userID, mTask, mDate, mDescription;
+    private String taskID, userID, mTask, mDate, mDescription, topic;
+
+    final private String FCM_API = "https://fcm.googleapis.com/fcm/send";
+    final private String serverKey = "key=" + "AAAApzVeTKs:APA91bEsti7GgrE1VBro-JsxcGuypGDi9kp-3Zq-7pedkl6V5DDzRtMw-WXGdXVOququWavsFvjGtD0tBVNdYfWV503h5pgA1Wc5pM9ONElM0TW9589dHGjFOWlpFqLMrcNTU1Kf5M-W";
+    final private String contentType = "application/json";
+    final String TAG = "NOTIFICATION TAG";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -52,73 +51,52 @@ public class AlarmReceiver extends BroadcastReceiver {
                     mDescription = model.getDescription();
                     mDate = model.getDate();
 
-                    Uri notifSound = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ context.getPackageName() + "/" + R.raw.test);
+                    topic = "/topics/alarmTask" + userID;
+                    JSONObject notification = new JSONObject();
+                    JSONObject notificationBody = new JSONObject();
 
-                    //Click on Notification
+                    Log.e(TAG, "topic: " + topic);
 
-                    Intent intent1 = new Intent(context, NotificationMessage.class);
-                    intent1.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent1.putExtra("task", mTask);
-                    intent1.putExtra("description", mDescription);
-                    intent1.putExtra("date", mDate);
+                    try {
+                        notificationBody.put("title", mTask);
+                        notificationBody.put("message", mDescription);
+                        notificationBody.put("date", mDate);
+                        notification.put("to", topic);
+                        notification.put("data", notificationBody);
 
-                    int pendingFlags;
-                    if (Build.VERSION.SDK_INT >= 23) {
-                        pendingFlags = PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE;
-                    } else {
-                        pendingFlags = PendingIntent.FLAG_ONE_SHOT;
+                        Log.e(TAG, "topic notification" + notification);
+                    } catch (JSONException e) {
+                        Log.e(TAG, "onCreate: " + e.getMessage());
                     }
-
-                    //Notification Builder
-                    PendingIntent pendingIntent = PendingIntent.getActivity(context, 1, intent1, pendingFlags);
-                    NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-                    RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification_layout);
-                    contentView.setImageViewResource(R.id.icon, R.drawable.logo3);
-
-                    int pendingSwitchFlags;
-                    if (Build.VERSION.SDK_INT >= 23) {
-                        pendingSwitchFlags = PendingIntent.FLAG_IMMUTABLE;
-                    } else {
-                        pendingSwitchFlags = 0;
-                    }
-
-                    PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(context, 0, intent, pendingSwitchFlags);
-                    contentView.setOnClickPendingIntent(R.id.flashButton, pendingSwitchIntent);
-                    contentView.setTextViewText(R.id.message, mTask);
-                    contentView.setTextViewText(R.id.date, mDate);
-                    NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, "notify_001")
-                            .setCategory(NotificationCompat.CATEGORY_ALARM)
-                            .setSmallIcon(R.drawable.ic_baseline_alarm_24)
-                            .setPriority(NotificationCompat.PRIORITY_MAX)
-                            .setSound(notifSound, AudioManager.STREAM_ALARM)
-                            .setVibrate(new long[0])
-                            .setAutoCancel(true)
-                            .setOngoing(true)
-                            .setContent(contentView)
-                            .setContentIntent(pendingIntent)
-                            .setFullScreenIntent(pendingIntent, true);
-                    Notification mNotif = mBuilder.build();
-                    mNotif.flags = Notification.FLAG_INSISTENT;
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        String channelId = "channel_id";
-                        NotificationChannel channel = new NotificationChannel(channelId, "channel name", NotificationManager.IMPORTANCE_HIGH);
-                        channel.enableVibration(true);
-                        AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                                .setUsage(AudioAttributes.USAGE_ALARM)
-                                .build();
-                        channel.setSound(notifSound, audioAttributes);
-                        notificationManager.createNotificationChannel(channel);
-                        mBuilder.setChannelId(channelId);
-                    }
-
-                    Notification notification = mBuilder.build();
-                    notificationManager.notify(1, notification);
+                    sendNotification(notification, context);
                 }
             }
         });
 
+    }
+
+    private void sendNotification(JSONObject notification, Context context) {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(FCM_API, notification,
+                new Response.Listener() {
+                    @Override
+                    public void onResponse(Object response) {
+                        Log.i(TAG, "onResponse: " + response.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.i(TAG, "onErrorResponse: Didn't work");
+                    }
+                }){
+            @Override
+            public Map getHeaders() throws AuthFailureError {
+                Map params = new HashMap<>();
+                params.put("Authorization", serverKey);
+                params.put("Content-Type", contentType);
+                return params;
+            }
+        };
+        MySingleton.getInstance(context.getApplicationContext()).addToRequestQueue(jsonObjectRequest);
     }
 }
